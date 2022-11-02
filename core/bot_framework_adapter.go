@@ -35,10 +35,10 @@ import (
 // the connector service.
 type Adapter interface {
 	ParseRequest(ctx context.Context, req *http.Request) (schema.Activity, error)
-	ProcessActivity(ctx context.Context, req schema.Activity, handler activity.Handler) error
-	ProactiveMessage(ctx context.Context, ref schema.ConversationReference, handler activity.Handler) error
-	DeleteActivity(ctx context.Context, activityID string, ref schema.ConversationReference) error
-	UpdateActivity(ctx context.Context, activity schema.Activity) error
+	ProcessActivity(ctx context.Context, req schema.Activity, handler activity.Handler) ([]byte, error)
+	ProactiveMessage(ctx context.Context, ref schema.ConversationReference, handler activity.Handler) ([]byte, error)
+	DeleteActivity(ctx context.Context, activityID string, ref schema.ConversationReference) ([]byte, error)
+	UpdateActivity(ctx context.Context, activity schema.Activity) ([]byte, error)
 }
 
 // AdapterSetting is the configuration for the Adapter.
@@ -97,19 +97,19 @@ func NewBotAdapter(settings AdapterSetting) (Adapter, error) {
 
 // ProcessActivity receives an activity, processes it as specified in by the 'handler' and
 // sends it to the connector service.
-func (bf *BotFrameworkAdapter) ProcessActivity(ctx context.Context, req schema.Activity, handler activity.Handler) error {
+func (bf *BotFrameworkAdapter) ProcessActivity(ctx context.Context, req schema.Activity, handler activity.Handler) ([]byte, error) {
 	turnContext := &activity.TurnContext{
 		Activity: req,
 	}
 
 	replyActivity, err := activity.PrepareActivityContext(handler, turnContext)
 	if err != nil {
-		return errors.Wrap(err, "Failed to create Activity context.")
+		return nil, errors.Wrap(err, "Failed to create Activity context.")
 	}
 
 	response, err := activity.NewActivityResponse(bf.Client)
 	if err != nil {
-		return errors.Wrap(err, "Failed to create response object.")
+		return nil, errors.Wrap(err, "Failed to create response object.")
 	}
 
 	return response.SendActivity(ctx, replyActivity)
@@ -117,21 +117,21 @@ func (bf *BotFrameworkAdapter) ProcessActivity(ctx context.Context, req schema.A
 
 // ProactiveMessage sends activity to a conversation.
 // This methods is used for Bot initiated conversation.
-func (bf *BotFrameworkAdapter) ProactiveMessage(ctx context.Context, ref schema.ConversationReference, handler activity.Handler) error {
+func (bf *BotFrameworkAdapter) ProactiveMessage(ctx context.Context, ref schema.ConversationReference, handler activity.Handler) ([]byte, error) {
 	// Prepare activity with conversation reference
 	activity := activity.ApplyConversationReference(schema.Activity{Type: schema.Message}, ref, true)
 	return bf.ProcessActivity(ctx, activity, handler)
 }
 
 // DeleteActivity Deletes an existing activity by Activity ID
-func (bf *BotFrameworkAdapter) DeleteActivity(ctx context.Context, activityID string, ref schema.ConversationReference) error {
+func (bf *BotFrameworkAdapter) DeleteActivity(ctx context.Context, activityID string, ref schema.ConversationReference) ([]byte, error) {
 	// Prepare activity with conversation reference
 	req := activity.ApplyConversationReference(schema.Activity{Type: schema.Message}, ref, true)
 	req.ID = activityID
 
 	response, err := activity.NewActivityResponse(bf.Client)
 	if err != nil {
-		return errors.Wrap(err, "Failed to create response object.")
+		return nil, errors.Wrap(err, "Failed to create response object.")
 	}
 
 	return response.DeleteActivity(ctx, req)
@@ -168,11 +168,11 @@ func (bf *BotFrameworkAdapter) authenticateRequest(ctx context.Context, req sche
 }
 
 // UpdateActivity Updates an existing activity
-func (bf *BotFrameworkAdapter) UpdateActivity(ctx context.Context, req schema.Activity) error {
+func (bf *BotFrameworkAdapter) UpdateActivity(ctx context.Context, req schema.Activity) ([]byte, error) {
 	response, err := activity.NewActivityResponse(bf.Client)
 
 	if err != nil {
-		return errors.Wrap(err, "Failed to create response object.")
+		return nil, errors.Wrap(err, "Failed to create response object.")
 	}
 	return response.UpdateActivity(ctx, req)
 }

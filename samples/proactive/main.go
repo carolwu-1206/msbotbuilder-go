@@ -94,7 +94,7 @@ func (ht *HTTPHandler) processMessage(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	err = ht.Adapter.ProcessActivity(ctx, act, welcomeHandler)
+	_, err = ht.Adapter.ProcessActivity(ctx, act, welcomeHandler)
 	if err != nil {
 		fmt.Println("Failed to process request.", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -106,7 +106,7 @@ func (ht *HTTPHandler) processMessage(w http.ResponseWriter, req *http.Request) 
 }
 
 func (ht *HTTPHandler) welcome() {
-	err := ht.Adapter.ProactiveMessage(context.TODO(), conversationRef, attachHandler)
+	_, err := ht.Adapter.ProactiveMessage(context.TODO(), conversationRef, attachHandler)
 	if err != nil {
 		fmt.Println("Failed to send proactive message.", err)
 		return

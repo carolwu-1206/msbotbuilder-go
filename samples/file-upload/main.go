@@ -42,7 +42,7 @@ func putRequest(u string, data []byte) error {
 
 func (ht *HTTPHandler) cleanupConsents(ID string, ref schema.ConversationReference) {
 	fmt.Printf("Deleting activity %s\n", ID)
-	if err := ht.DeleteActivity(context.TODO(), ID, ref); err != nil {
+	if _, err := ht.DeleteActivity(context.TODO(), ID, ref); err != nil {
 		log.Printf("Failed to delete activity. %s", err.Error())
 	}
 }
@@ -134,7 +134,7 @@ func (ht *HTTPHandler) processMessage(w http.ResponseWriter, req *http.Request) 
 		},
 	}
 
-	err = ht.Adapter.ProcessActivity(ctx, act, customHandler)
+	_, err = ht.Adapter.ProcessActivity(ctx, act, customHandler)
 	if err != nil {
 		fmt.Println("Failed to process request.", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)

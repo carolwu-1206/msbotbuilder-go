@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -39,9 +40,9 @@ import (
 
 // Client provides interface to send requests to the connector service.
 type Client interface {
-	Post(ctx context.Context, url url.URL, activity schema.Activity) error
-	Delete(ctx context.Context, url url.URL, activity schema.Activity) error
-	Put(ctx context.Context, url url.URL, activity schema.Activity) error
+	Post(ctx context.Context, url url.URL, activity schema.Activity) ([]byte, error)
+	Delete(ctx context.Context, url url.URL, activity schema.Activity) ([]byte, error)
+	Put(ctx context.Context, url url.URL, activity schema.Activity) ([]byte, error)
 }
 
 // ConnectorClient implements Client to send HTTP requests to the connector service.
@@ -72,14 +73,14 @@ func NewClient(config *Config) (Client, error) {
 //
 // Creates a HTTP POST request with the provided activity as the body and a Bearer token in the header.
 // Returns any error as received from the call to connector service.
-func (client *ConnectorClient) Post(ctx context.Context, target url.URL, activity schema.Activity) error {
+func (client *ConnectorClient) Post(ctx context.Context, target url.URL, activity schema.Activity) ([]byte, error) {
 	jsonStr, err := json.Marshal(activity)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target.String(), bytes.NewBuffer(jsonStr))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return client.sendRequest(req, activity)
 }
@@ -88,10 +89,10 @@ func (client *ConnectorClient) Post(ctx context.Context, target url.URL, activit
 //
 // Creates a HTTP DELETE request with the provided activity ID and a Bearer token in the header.
 // Returns any error as received from the call to connector service.
-func (client *ConnectorClient) Delete(ctx context.Context, target url.URL, activity schema.Activity) error {
+func (client *ConnectorClient) Delete(ctx context.Context, target url.URL, activity schema.Activity) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, target.String(), nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return client.sendRequest(req, activity)
 }
@@ -100,22 +101,22 @@ func (client *ConnectorClient) Delete(ctx context.Context, target url.URL, activ
 //
 // Creates a HTTP PUT request with the provided activity payload and a Bearer token in the header.
 // Returns any error as received from the call to connector service.
-func (client *ConnectorClient) Put(ctx context.Context, target url.URL, activity schema.Activity) error {
+func (client *ConnectorClient) Put(ctx context.Context, target url.URL, activity schema.Activity) ([]byte, error) {
 	jsonStr, err := json.Marshal(activity)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, target.String(), bytes.NewBuffer(jsonStr))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return client.sendRequest(req, activity)
 }
 
-func (client *ConnectorClient) sendRequest(req *http.Request, activity schema.Activity) error {
+func (client *ConnectorClient) sendRequest(req *http.Request, activity schema.Activity) ([]byte, error) {
 	token, err := client.getToken(req.Context())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -124,22 +125,27 @@ func (client *ConnectorClient) sendRequest(req *http.Request, activity schema.Ac
 	return client.checkRespError(client.ReplyClient.Do(req))
 }
 
-func (client *ConnectorClient) checkRespError(resp *http.Response, err error) error {
+func (client *ConnectorClient) checkRespError(resp *http.Response, err error) ([]byte, error) {
 	allowedResp := []int{http.StatusOK, http.StatusCreated, http.StatusAccepted}
 	if err != nil {
-		return customerror.HTTPError{
+		return nil, customerror.HTTPError{
 			HtErr: err,
 		}
 	}
 	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
 	// Check if resp allowed
 	for _, code := range allowedResp {
 		if code == resp.StatusCode {
-			return nil
+			return body, nil
 		}
 	}
 
-	return customerror.HTTPError{
+	return nil, customerror.HTTPError{
 		HtErr:      errors.New("invalid response"),
 		StatusCode: resp.StatusCode,
 	}

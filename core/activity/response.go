@@ -32,9 +32,9 @@ import (
 
 // Response provides functionalities to send activity to the connector service.
 type Response interface {
-	SendActivity(ctx context.Context, activity schema.Activity) error
-	DeleteActivity(ctx context.Context, activity schema.Activity) error
-	UpdateActivity(ctx context.Context, activity schema.Activity) error
+	SendActivity(ctx context.Context, activity schema.Activity) ([]byte, error)
+	DeleteActivity(ctx context.Context, activity schema.Activity) ([]byte, error)
+	UpdateActivity(ctx context.Context, activity schema.Activity) ([]byte, error)
 }
 
 const (
@@ -51,25 +51,25 @@ type DefaultResponse struct {
 }
 
 // DeleteActivity sends a Delete activity method to the BOT connector service.
-func (response *DefaultResponse) DeleteActivity(ctx context.Context, activity schema.Activity) error {
+func (response *DefaultResponse) DeleteActivity(ctx context.Context, activity schema.Activity) ([]byte, error) {
 	u, err := url.Parse(activity.ServiceURL)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to parse ServiceURL %s.", activity.ServiceURL)
+		return nil, errors.Wrapf(err, "Failed to parse ServiceURL %s.", activity.ServiceURL)
 	}
 
 	respPath := fmt.Sprintf(activityResourceURL, APIVersion, activity.Conversation.ID, activity.ID)
 
 	// Send activity to client
 	u.Path = path.Join(u.Path, respPath)
-	err = response.Client.Delete(ctx, *u, activity)
-	return errors.Wrap(err, "Failed to delete response.")
+	resp, err := response.Client.Delete(ctx, *u, activity)
+	return resp, errors.Wrap(err, "Failed to delete response.")
 }
 
 // SendActivity sends an activity to the BOT connector service.
-func (response *DefaultResponse) SendActivity(ctx context.Context, activity schema.Activity) error {
+func (response *DefaultResponse) SendActivity(ctx context.Context, activity schema.Activity) ([]byte, error) {
 	u, err := url.Parse(activity.ServiceURL)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to parse ServiceURL %s.", activity.ServiceURL)
+		return nil, errors.Wrapf(err, "Failed to parse ServiceURL %s.", activity.ServiceURL)
 	}
 
 	respPath := fmt.Sprintf(sendToConversationURL, APIVersion, activity.Conversation.ID)
@@ -81,23 +81,23 @@ func (response *DefaultResponse) SendActivity(ctx context.Context, activity sche
 
 	// Send activity to client
 	u.Path = path.Join(u.Path, respPath)
-	err = response.Client.Post(ctx, *u, activity)
-	return errors.Wrap(err, "Failed to send response.")
+	resp, err := response.Client.Post(ctx, *u, activity)
+	return resp, errors.Wrap(err, "Failed to send response.")
 }
 
 // UpdateActivity sends a Put activity method to the BOT connector service.
-func (response *DefaultResponse) UpdateActivity(ctx context.Context, activity schema.Activity) error {
+func (response *DefaultResponse) UpdateActivity(ctx context.Context, activity schema.Activity) ([]byte, error) {
 	u, err := url.Parse(activity.ServiceURL)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to parse ServiceURL %s.", activity.ServiceURL)
+		return nil, errors.Wrapf(err, "Failed to parse ServiceURL %s.", activity.ServiceURL)
 	}
 
 	respPath := fmt.Sprintf(activityResourceURL, APIVersion, activity.Conversation.ID, activity.ID)
 
 	// Send activity to client
 	u.Path = path.Join(u.Path, respPath)
-	err = response.Client.Put(ctx, *u, activity)
-	return errors.Wrap(err, "Failed to update response.")
+	resp, err := response.Client.Put(ctx, *u, activity)
+	return resp, errors.Wrap(err, "Failed to update response.")
 }
 
 // NewActivityResponse provides a DefaultResponse implementaton of Response.

@@ -111,7 +111,7 @@ func TestExample(t *testing.T) {
 		adapter := core.BotFrameworkAdapter{setting, &core.MockTokenValidator{}, connectorClient}
 		act, err := adapter.ParseRequest(ctx, req)
 		assert.Nil(t, err, fmt.Sprintf("Failed with error %s", err))
-		err = adapter.ProcessActivity(ctx, act, customHandler)
+		_, err = adapter.ProcessActivity(ctx, act, customHandler)
 		assert.Nil(t, err, fmt.Sprintf("Failed with error %s", err))
 	})
 	rr := httptest.NewRecorder()
@@ -164,7 +164,7 @@ func TestActivityUpdate(t *testing.T) {
 		adapter := core.BotFrameworkAdapter{setting, &core.MockTokenValidator{}, connectorClient}
 		act, err := adapter.ParseRequest(ctx, req)
 		act.Label = "TestLabel"
-		err = adapter.UpdateActivity(ctx, act)
+		_, err = adapter.UpdateActivity(ctx, act)
 		assert.Nil(t, err, fmt.Sprintf("Failed with error %s", err))
 	})
 	rr := httptest.NewRecorder()

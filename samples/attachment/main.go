@@ -81,7 +81,7 @@ func (ht *HTTPHandler) processMessage(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	err = ht.Adapter.ProcessActivity(ctx, activity, customHandler)
+	_, err = ht.Adapter.ProcessActivity(ctx, activity, customHandler)
 	if err != nil {
 		fmt.Println("Failed to process request.", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)

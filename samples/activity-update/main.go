@@ -77,7 +77,7 @@ func (ht *HTTPHandler) processMessage(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	err = ht.Adapter.ProcessActivity(ctx, activityInstance, customHandler)
+	_, err = ht.Adapter.ProcessActivity(ctx, activityInstance, customHandler)
 	if err != nil {
 		fmt.Println("Failed to process request", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -89,7 +89,7 @@ func (ht *HTTPHandler) processMessage(w http.ResponseWriter, req *http.Request) 
 	if activityID != "" {
 		act.Text = "Changed Activity"
 		act.ID = activityID
-		err = ht.Adapter.UpdateActivity(ctx, act)
+		_, err = ht.Adapter.UpdateActivity(ctx, act)
 		if err != nil {
 			fmt.Println("Failed to process request", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
