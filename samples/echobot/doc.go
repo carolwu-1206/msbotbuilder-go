@@ -1,5 +1,5 @@
 /*Bot Framework echo bot sample.
-This bot uses msbotbuilder-go: https://github.com/infracloudio/msbotbuilder-go. It shows
+This bot uses msbotbuilder-go: https://github.com/carolwu-1206/msbotbuilder-go. It shows
 how to create a simple bot that accepts input from the user and echoes it back.
 
 

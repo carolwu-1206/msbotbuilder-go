@@ -1,4 +1,4 @@
-module github.com/infracloudio/msbotbuilder-go
+module github.com/carolwu-1206/msbotbuilder-go
 
 go 1.16
 
