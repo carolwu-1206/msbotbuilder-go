@@ -76,13 +76,13 @@ func (response *DefaultResponse) SendActivity(ctx context.Context, activity sche
 
 	// if ReplyToID is set in the activity, we send reply to that particular activity
 	if activity.ReplyToID != "" {
-		respPath = fmt.Sprintf(activityResourceURL, APIVersion, activity.Conversation.ID, activity.ID)
+		respPath = fmt.Sprintf(activityResourceURL, APIVersion, activity.Conversation.ID, activity.ReplyToID)
 	}
 
 	// Send activity to client
 	u.Path = path.Join(u.Path, respPath)
 	resp, err := response.Client.Post(ctx, *u, activity)
-	return resp, errors.Wrap(err, "Failed to send response.")
+	return resp, errors.Wrap(err, "Failed to send response."+u.String())
 }
 
 // UpdateActivity sends a Put activity method to the BOT connector service.
