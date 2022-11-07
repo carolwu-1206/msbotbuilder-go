@@ -106,7 +106,9 @@ type Activity struct {
 	Attachments []Attachment `json:"attachments,omitempty"`
 
 	// Represents the entities that were mentioned in the message.
-	Entities []Entity `json:"entities,omitempty"`
+	// https://learn.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-4.0#activity-object
+	// according to the definition, entities should be array of objects that represents the entities that were mentioned in the message.
+	Entities []interface{} `json:"entities,omitempty"`
 
 	// Contains channel-specific content.
 	ChannelData map[string]interface{} `json:"channelData,omitempty"`
