@@ -159,7 +159,7 @@ func (client *ConnectorClient) checkRespError(resp *http.Response, err error) ([
 	}
 
 	return nil, customerror.HTTPError{
-		HtErr:      errors.New("invalid response"),
+		HtErr:      fmt.Errorf("invalid response: %s", body),
 		StatusCode: resp.StatusCode,
 	}
 }
