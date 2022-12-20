@@ -43,6 +43,7 @@ type Client interface {
 	Post(ctx context.Context, url url.URL, activity schema.Activity) ([]byte, error)
 	Delete(ctx context.Context, url url.URL, activity schema.Activity) ([]byte, error)
 	Put(ctx context.Context, url url.URL, activity schema.Activity) ([]byte, error)
+	Get(ctx context.Context, url url.URL) ([]byte, error)
 }
 
 // ConnectorClient implements Client to send HTTP requests to the connector service.
@@ -111,6 +112,18 @@ func (client *ConnectorClient) Put(ctx context.Context, target url.URL, activity
 		return nil, err
 	}
 	return client.sendRequest(req, activity)
+}
+
+// Get an response.
+//
+// Creates a HTTP GET request with a Bearer token in the header.
+// Returns any error as received from the call to connector service.
+func (client *ConnectorClient) Get(ctx context.Context, target url.URL) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	return client.sendRequest(req, schema.Activity{})
 }
 
 func (client *ConnectorClient) sendRequest(req *http.Request, activity schema.Activity) ([]byte, error) {

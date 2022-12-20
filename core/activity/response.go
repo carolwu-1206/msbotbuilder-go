@@ -35,14 +35,16 @@ type Response interface {
 	SendActivity(ctx context.Context, activity schema.Activity) ([]byte, error)
 	DeleteActivity(ctx context.Context, activity schema.Activity) ([]byte, error)
 	UpdateActivity(ctx context.Context, activity schema.Activity) ([]byte, error)
+	GetConversationMember(ctx context.Context, activity schema.Activity) ([]byte, error)
 }
 
 const (
 	// APIVersion for response URLs
 	APIVersion = "v3"
 
-	sendToConversationURL = "/%s/conversations/%s/activities"
-	activityResourceURL   = "/%s/conversations/%s/activities/%s"
+	sendToConversationURL    = "/%s/conversations/%s/activities"
+	activityResourceURL      = "/%s/conversations/%s/activities/%s"
+	getConversationMemberURL = "/%s/conversations/%s/members/%s"
 )
 
 // DefaultResponse is the default implementation of Response.
@@ -97,6 +99,21 @@ func (response *DefaultResponse) UpdateActivity(ctx context.Context, activity sc
 	// Send activity to client
 	u.Path = path.Join(u.Path, respPath)
 	resp, err := response.Client.Put(ctx, *u, activity)
+	return resp, errors.Wrap(err, "Failed to update response.")
+}
+
+// GetConversationMember sends a Get BOT connector service to get conversation member details.
+func (response *DefaultResponse) GetConversationMember(ctx context.Context, activity schema.Activity) ([]byte, error) {
+	u, err := url.Parse(activity.ServiceURL)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to parse ServiceURL %s.", activity.ServiceURL)
+	}
+
+	respPath := fmt.Sprintf(getConversationMemberURL, APIVersion, activity.Conversation.ID, activity.From.ID)
+
+	// Send activity to client
+	u.Path = path.Join(u.Path, respPath)
+	resp, err := response.Client.Get(ctx, *u)
 	return resp, errors.Wrap(err, "Failed to update response.")
 }
 

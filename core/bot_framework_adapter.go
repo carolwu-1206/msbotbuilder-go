@@ -39,6 +39,7 @@ type Adapter interface {
 	ProactiveMessage(ctx context.Context, ref schema.ConversationReference, handler activity.Handler) ([]byte, error)
 	DeleteActivity(ctx context.Context, activityID string, ref schema.ConversationReference) ([]byte, error)
 	UpdateActivity(ctx context.Context, activity schema.Activity) ([]byte, error)
+	GetConversationMember(ctx context.Context, activity schema.Activity) ([]byte, error)
 }
 
 // AdapterSetting is the configuration for the Adapter.
@@ -175,4 +176,14 @@ func (bf *BotFrameworkAdapter) UpdateActivity(ctx context.Context, req schema.Ac
 		return nil, errors.Wrap(err, "Failed to create response object.")
 	}
 	return response.UpdateActivity(ctx, req)
+}
+
+// GetConversationMember gets the member details of a conversation sender
+func (bf *BotFrameworkAdapter) GetConversationMember(ctx context.Context, req schema.Activity) ([]byte, error) {
+	response, err := activity.NewActivityResponse(bf.Client)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create response object.")
+	}
+	return response.GetConversationMember(ctx, req)
 }

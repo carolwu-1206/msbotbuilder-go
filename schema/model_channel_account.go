@@ -42,4 +42,6 @@ type ChannelAccount struct {
 	AadObjectID string `json:"aadObjectId,omitempty"`
 
 	Role RoleTypes `json:"role,omitempty"`
+
+	Email string `json:"email,omitempty"`
 }
