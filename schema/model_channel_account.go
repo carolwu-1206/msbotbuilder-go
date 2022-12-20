@@ -44,4 +44,6 @@ type ChannelAccount struct {
 	Role RoleTypes `json:"role,omitempty"`
 
 	Email string `json:"email,omitempty"`
+
+	UserPrincipalName string `json:"userPrincipalName,omitempty"`
 }
