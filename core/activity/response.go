@@ -21,6 +21,7 @@ package activity
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"path"
@@ -83,8 +84,11 @@ func (response *DefaultResponse) SendActivity(ctx context.Context, activity sche
 
 	// Send activity to client
 	u.Path = path.Join(u.Path, respPath)
-	resp, err := response.Client.Post(ctx, *u, activity)
-	return resp, errors.Wrap(err, "Failed to send response.")
+	_, err = response.Client.Post(ctx, *u, activity)
+
+	reqBytes, _ := json.Marshal(activity)
+
+	return reqBytes, errors.Wrap(err, "Failed to send response.")
 }
 
 // UpdateActivity sends a Put activity method to the BOT connector service.
