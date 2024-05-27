@@ -21,9 +21,10 @@ package client
 
 import (
 	"errors"
-	"github.com/carolwu-1206/msbotbuilder-go/connector/auth"
 	"net/http"
 	"net/url"
+
+	"github.com/carolwu-1206/msbotbuilder-go/connector/auth"
 )
 
 // Config represents the credentials for a user program and the URL for validating the credentials.
@@ -36,9 +37,24 @@ type Config struct {
 
 // NewClientConfig creates configuration for ConnectorClient.
 func NewClientConfig(credentials auth.CredentialProvider, tokenURL string) (*Config, error) {
-
 	if len(credentials.GetAppID()) < 0 || len(credentials.GetAppPassword()) < 0 {
 		return &Config{}, errors.New("Invalid client credentials")
+	}
+
+	parsedURL, err := url.Parse(tokenURL)
+	if err != nil {
+		return &Config{}, errors.New("Invalid token URL")
+	}
+
+	return &Config{
+		Credentials: credentials,
+		AuthURL:     *parsedURL,
+	}, nil
+}
+
+func NewClientConfigWithCert(credentials auth.CredentialProvider, tokenURL string) (*Config, error) {
+	if credentials.GetCert() == nil || credentials.GetTenant() == "" {
+		return &Config{}, errors.New("Invalid client credentials with cert")
 	}
 
 	parsedURL, err := url.Parse(tokenURL)

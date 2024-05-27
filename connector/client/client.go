@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/carolwu-1206/msbotbuilder-go/connector/auth"
 	"github.com/carolwu-1206/msbotbuilder-go/connector/cache"
 	"github.com/carolwu-1206/msbotbuilder-go/schema"
@@ -165,7 +166,26 @@ func (client *ConnectorClient) checkRespError(resp *http.Response, err error) ([
 }
 
 func (client *ConnectorClient) getToken(ctx context.Context) (string, error) {
+	if client.Credentials.GetAppPassword() != "" {
+		return client.getTokenByPassword(ctx)
+	}
+	if client.Credentials.GetCert() != nil {
+		oauthConfig, err := adal.NewOAuthConfig(client.AuthURL.String(), client.Credentials.GetTenant())
+		if err != nil {
+			return "", err
+		}
+		servicePrincipalToken, err := adal.NewServicePrincipalTokenFromCertificate(
+			*oauthConfig, client.Credentials.GetAppID(), client.Credentials.GetCert().Certificate,
+			client.Credentials.GetCert().PrivateKey, auth.ToChannelFromBotOauthScope)
+		if err != nil {
+			return "", err
+		}
+		return servicePrincipalToken.OAuthToken(), nil
+	}
+	return "", errors.New("invalid credentials")
+}
 
+func (client *ConnectorClient) getTokenByPassword(ctx context.Context) (string, error) {
 	// Return cached JWT
 	if !client.AuthCache.IsExpired() {
 		return client.AuthCache.Keys.(string), nil
