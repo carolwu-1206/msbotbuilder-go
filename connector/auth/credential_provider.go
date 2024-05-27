@@ -59,3 +59,13 @@ func (sp SimpleCredentialProvider) GetAppID() string {
 func (sp SimpleCredentialProvider) IsAuthenticationDisabled() bool {
 	return sp.AppID == ""
 }
+
+// GetCert returns the Certificate of the credential.
+func (sp SimpleCredentialProvider) GetCert() *adal.ServicePrincipalCertificateSecret {
+	return sp.Cert
+}
+
+// GetTenant returns the Tenant of the credential.
+func (sp SimpleCredentialProvider) GetTenant() string {
+	return sp.Tenant
+}
