@@ -82,6 +82,8 @@ func NewClient(config *Config) (Client, error) {
 			return nil, err
 		}
 		servicePrincipalToken.Refresh()
+
+		fmt.Println("=============" + servicePrincipalToken.Token().AccessToken)
 	}
 
 	return &ConnectorClient{*config, cache.AuthCache{}, servicePrincipalToken}, nil
