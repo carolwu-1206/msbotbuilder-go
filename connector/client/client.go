@@ -82,8 +82,6 @@ func NewClient(config *Config) (Client, error) {
 			return nil, err
 		}
 		servicePrincipalToken.Refresh()
-
-		panic(servicePrincipalToken.OAuthToken())
 	}
 
 	return &ConnectorClient{*config, cache.AuthCache{}, servicePrincipalToken}, nil
