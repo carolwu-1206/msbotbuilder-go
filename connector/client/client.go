@@ -71,7 +71,7 @@ func NewClient(config *Config) (Client, error) {
 
 	var servicePrincipalToken *adal.ServicePrincipalToken
 	if config.Credentials.GetCert() != nil {
-		oauthConfig, err := adal.NewOAuthConfig(config.AuthURL.String(), config.Credentials.GetTenant())
+		oauthConfig, err := adal.NewOAuthConfig(auth.ToChannelFromBotLoginURLPrefix, config.Credentials.GetTenant())
 		if err != nil {
 			return nil, err
 		}
