@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/carolwu-1206/msbotbuilder-go/connector/auth"
 	"github.com/carolwu-1206/msbotbuilder-go/connector/client"
 	"github.com/carolwu-1206/msbotbuilder-go/core/activity"
@@ -46,6 +47,7 @@ type Adapter interface {
 type AdapterSetting struct {
 	AppID              string
 	AppPassword        string
+	Cert               *adal.ServicePrincipalCertificateSecret
 	ChannelAuthTenant  string
 	OauthEndpoint      string
 	OpenIDMetadata     string
@@ -68,6 +70,8 @@ func NewBotAdapter(settings AdapterSetting) (Adapter, error) {
 	settings.CredentialProvider = auth.SimpleCredentialProvider{
 		AppID:    settings.AppID,
 		Password: settings.AppPassword,
+		Tenant:   settings.ChannelAuthTenant,
+		Cert:     settings.Cert,
 	}
 
 	if settings.ChannelService == "" {

@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/carolwu-1206/msbotbuilder-go/connector/auth"
 	"github.com/carolwu-1206/msbotbuilder-go/connector/cache"
 	"github.com/carolwu-1206/msbotbuilder-go/schema"
@@ -50,6 +51,7 @@ type Client interface {
 type ConnectorClient struct {
 	Config
 	cache.AuthCache
+	servicePrincipalToken *adal.ServicePrincipalToken
 }
 
 // NewClient constructs and returns a new ConnectorClient with provided configuration and an empty cache.
@@ -67,7 +69,22 @@ func NewClient(config *Config) (Client, error) {
 		config.ReplyClient = &http.Client{}
 	}
 
-	return &ConnectorClient{*config, cache.AuthCache{}}, nil
+	var servicePrincipalToken *adal.ServicePrincipalToken
+	if config.Credentials.GetCert() != nil {
+		oauthConfig, err := adal.NewOAuthConfig(auth.ToChannelFromBotLoginURLPrefix, config.Credentials.GetTenant())
+		if err != nil {
+			return nil, err
+		}
+		servicePrincipalToken, err = adal.NewServicePrincipalTokenFromCertificate(
+			*oauthConfig, config.Credentials.GetAppID(), config.Credentials.GetCert().Certificate,
+			config.Credentials.GetCert().PrivateKey, auth.ToBotFromChannelTokenIssuer)
+		if err != nil {
+			return nil, err
+		}
+		servicePrincipalToken.Refresh()
+	}
+
+	return &ConnectorClient{*config, cache.AuthCache{}, servicePrincipalToken}, nil
 }
 
 // Post an activity to given URL.
@@ -165,7 +182,16 @@ func (client *ConnectorClient) checkRespError(resp *http.Response, err error) ([
 }
 
 func (client *ConnectorClient) getToken(ctx context.Context) (string, error) {
+	if client.Credentials.GetAppPassword() != "" {
+		return client.getTokenByPassword(ctx)
+	}
+	if client.Credentials.GetCert() != nil {
+		return client.servicePrincipalToken.OAuthToken(), nil
+	}
+	return "", errors.New("invalid credentials")
+}
 
+func (client *ConnectorClient) getTokenByPassword(ctx context.Context) (string, error) {
 	// Return cached JWT
 	if !client.AuthCache.IsExpired() {
 		return client.AuthCache.Keys.(string), nil

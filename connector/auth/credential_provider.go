@@ -19,12 +19,16 @@
 
 package auth
 
+import "github.com/Azure/go-autorest/autorest/adal"
+
 // CredentialProvider represents and provides functionality for a type of Credential.
 type CredentialProvider interface {
 	IsValidAppID(appID string) bool
 	GetAppPassword() string
 	GetAppID() string
 	IsAuthenticationDisabled() bool
+	GetCert() *adal.ServicePrincipalCertificateSecret
+	GetTenant() string
 }
 
 // SimpleCredentialProvider can be used for authentication to the connector service using
@@ -32,6 +36,8 @@ type CredentialProvider interface {
 type SimpleCredentialProvider struct {
 	AppID    string
 	Password string
+	Cert     *adal.ServicePrincipalCertificateSecret
+	Tenant   string
 }
 
 // IsValidAppID returns if the specified appID is valid.
@@ -52,4 +58,14 @@ func (sp SimpleCredentialProvider) GetAppID() string {
 // IsAuthenticationDisabled checks if no authentication is to be performed.
 func (sp SimpleCredentialProvider) IsAuthenticationDisabled() bool {
 	return sp.AppID == ""
+}
+
+// GetCert returns the Certificate of the credential.
+func (sp SimpleCredentialProvider) GetCert() *adal.ServicePrincipalCertificateSecret {
+	return sp.Cert
+}
+
+// GetTenant returns the Tenant of the credential.
+func (sp SimpleCredentialProvider) GetTenant() string {
+	return sp.Tenant
 }
