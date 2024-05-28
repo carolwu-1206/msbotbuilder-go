@@ -77,7 +77,7 @@ func NewClient(config *Config) (Client, error) {
 		}
 		servicePrincipalToken, err = adal.NewServicePrincipalTokenFromCertificate(
 			*oauthConfig, config.Credentials.GetAppID(), config.Credentials.GetCert().Certificate,
-			config.Credentials.GetCert().PrivateKey, auth.ToChannelFromBotOauthScope)
+			config.Credentials.GetCert().PrivateKey, auth.ToBotFromChannelTokenIssuer)
 		if err != nil {
 			return nil, err
 		}
@@ -152,7 +152,6 @@ func (client *ConnectorClient) sendRequest(req *http.Request, activity schema.Ac
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	panic(token)
 	return client.checkRespError(client.ReplyClient.Do(req))
 }
 
