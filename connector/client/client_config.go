@@ -51,19 +51,3 @@ func NewClientConfig(credentials auth.CredentialProvider, tokenURL string) (*Con
 		AuthURL:     *parsedURL,
 	}, nil
 }
-
-func NewClientConfigWithCert(credentials auth.CredentialProvider, tokenURL string) (*Config, error) {
-	if credentials.GetCert() == nil || credentials.GetTenant() == "" {
-		return &Config{}, errors.New("Invalid client credentials with cert")
-	}
-
-	parsedURL, err := url.Parse(tokenURL)
-	if err != nil {
-		return &Config{}, errors.New("Invalid token URL")
-	}
-
-	return &Config{
-		Credentials: credentials,
-		AuthURL:     *parsedURL,
-	}, nil
-}

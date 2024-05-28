@@ -152,6 +152,7 @@ func (client *ConnectorClient) sendRequest(req *http.Request, activity schema.Ac
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
 
+	panic(token)
 	return client.checkRespError(client.ReplyClient.Do(req))
 }
 
