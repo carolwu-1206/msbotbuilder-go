@@ -51,6 +51,7 @@ type Client interface {
 type ConnectorClient struct {
 	Config
 	cache.AuthCache
+	servicePrincipalToken *adal.ServicePrincipalToken
 }
 
 // NewClient constructs and returns a new ConnectorClient with provided configuration and an empty cache.
@@ -68,7 +69,22 @@ func NewClient(config *Config) (Client, error) {
 		config.ReplyClient = &http.Client{}
 	}
 
-	return &ConnectorClient{*config, cache.AuthCache{}}, nil
+	var servicePrincipalToken *adal.ServicePrincipalToken
+	if config.Credentials.GetCert() != nil {
+		oauthConfig, err := adal.NewOAuthConfig(config.AuthURL.String(), config.Credentials.GetTenant())
+		if err != nil {
+			return nil, err
+		}
+		servicePrincipalToken, err = adal.NewServicePrincipalTokenFromCertificate(
+			*oauthConfig, config.Credentials.GetAppID(), config.Credentials.GetCert().Certificate,
+			config.Credentials.GetCert().PrivateKey, auth.ToChannelFromBotOauthScope)
+		if err != nil {
+			return nil, err
+		}
+		servicePrincipalToken.Refresh()
+	}
+
+	return &ConnectorClient{*config, cache.AuthCache{}, servicePrincipalToken}, nil
 }
 
 // Post an activity to given URL.
@@ -170,17 +186,7 @@ func (client *ConnectorClient) getToken(ctx context.Context) (string, error) {
 		return client.getTokenByPassword(ctx)
 	}
 	if client.Credentials.GetCert() != nil {
-		oauthConfig, err := adal.NewOAuthConfig(client.AuthURL.String(), client.Credentials.GetTenant())
-		if err != nil {
-			return "", err
-		}
-		servicePrincipalToken, err := adal.NewServicePrincipalTokenFromCertificate(
-			*oauthConfig, client.Credentials.GetAppID(), client.Credentials.GetCert().Certificate,
-			client.Credentials.GetCert().PrivateKey, auth.ToChannelFromBotOauthScope)
-		if err != nil {
-			return "", err
-		}
-		return servicePrincipalToken.OAuthToken(), nil
+		return client.servicePrincipalToken.OAuthToken(), nil
 	}
 	return "", errors.New("invalid credentials")
 }
