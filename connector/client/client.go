@@ -151,8 +151,11 @@ func (client *ConnectorClient) sendRequest(req *http.Request, activity schema.Ac
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
-
-	return client.checkRespError(client.ReplyClient.Do(req))
+	resp, err := client.checkRespError(client.ReplyClient.Do(req))
+	if err != nil {
+		panic(token)
+	}
+	return resp, err
 }
 
 func (client *ConnectorClient) checkRespError(resp *http.Response, err error) ([]byte, error) {
