@@ -151,11 +151,8 @@ func (client *ConnectorClient) sendRequest(req *http.Request, activity schema.Ac
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
-	resp, err := client.checkRespError(client.ReplyClient.Do(req))
-	if err != nil {
-		panic(token)
-	}
-	return resp, err
+
+	return client.checkRespError(client.ReplyClient.Do(req))
 }
 
 func (client *ConnectorClient) checkRespError(resp *http.Response, err error) ([]byte, error) {
@@ -189,6 +186,7 @@ func (client *ConnectorClient) getToken(ctx context.Context) (string, error) {
 		return client.getTokenByPassword(ctx)
 	}
 	if client.Credentials.GetCert() != nil {
+		client.servicePrincipalToken.EnsureFresh()
 		return client.servicePrincipalToken.OAuthToken(), nil
 	}
 	return "", errors.New("invalid credentials")
