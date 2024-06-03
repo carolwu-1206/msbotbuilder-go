@@ -186,6 +186,7 @@ func (client *ConnectorClient) getToken(ctx context.Context) (string, error) {
 		return client.getTokenByPassword(ctx)
 	}
 	if client.Credentials.GetCert() != nil {
+		client.servicePrincipalToken.EnsureFresh()
 		return client.servicePrincipalToken.OAuthToken(), nil
 	}
 	return "", errors.New("invalid credentials")
