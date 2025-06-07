@@ -81,7 +81,10 @@ func NewClient(config *Config) (Client, error) {
 		if err != nil {
 			return nil, err
 		}
-		servicePrincipalToken.Refresh()
+		err = servicePrincipalToken.Refresh()
+		if err != nil {
+			return nil, fmt.Errorf("failed to refresh service principal token: %w", err)
+		}
 	}
 
 	return &ConnectorClient{*config, cache.AuthCache{}, servicePrincipalToken}, nil
